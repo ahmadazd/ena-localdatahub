@@ -47,7 +47,7 @@ class AdvanceSearchMetadataFetching:
             elif self.project and not tax_id:
                 ext = f"?result=read_run&query=study_accession%3D%22{self.project}%22&fields=run_accession%2C" \
                       f"{self.fileType.lower()}_ftp&limit=0&format=json"
-
+            print(ext)
             sys.stderr.write(
                 'Fetching  Metadata From Advanced Search..............................................................')
             server = "https://www.ebi.ac.uk/ena/portal/api/search"
@@ -65,11 +65,12 @@ class AdvanceSearchMetadataFetching:
                 sys.stderr.write("Attention: Internal Server Error, the process has stopped and skipped "
                                  "( Data might be incomplete )\n")
             data = json.loads(command.content)
-            ftp_link = [{f'{self.fileType.lower()}_ftp': x[f'{self.fileType.lower()}_ftp']} for x in data]
-            ftp_link_df = pd.DataFrame(ftp_link)
 
-            print(ftp_link_df)
-            return ftp_link_df
+            metadata = [{'run_accession': x['run_accession'], f'{self.fileType.lower()}_ftp': x[f'{self.fileType.lower()}_ftp']} for x in data]
+            metadata_df = pd.DataFrame(metadata)
+
+            print(metadata_df)
+            return metadata_df
         else:
             sys.stderr.write('File type is not allowed, please include only one of the following terms (fasta, bam)')
             exit(1)

@@ -37,5 +37,8 @@ class FetchingReadFiles:
             if url == f'{self.fileType.lower()}_ftp':
                 continue
             self.API_call(url_file[0])
-            if url_file[1]:
-                self.API_call(url_file[1])
+            try:
+                if url_file[1]:
+                    self.API_call(url_file[1])
+            except IndexError:
+                continue

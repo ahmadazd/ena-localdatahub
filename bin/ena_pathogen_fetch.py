@@ -34,8 +34,11 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
    # Get the ftp link for the read files
-   ftp_link = AdvanceSearchMetadataFetching(args.fileType, args.project, args.tax).public_metadata_fetch()
+   metadata = AdvanceSearchMetadataFetching(args.fileType, args.project, args.tax).public_metadata_fetch()
 
    # Downloading files
-   FetchingReadFiles(ftp_link, args.fileType, args.output).fetching_readsFiles()
+   run_accessions = metadata[['run_accession']]
+   reads = run_accessions.to_csv(f'{args.output}/read_accessions.txt', sep =',', index=False)
+   FetchingReadFiles(metadata[[f'{args.fileType}_ftp']], args.fileType, args.output).fetching_readsFiles()
+
 
