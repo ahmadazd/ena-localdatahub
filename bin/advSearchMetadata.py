@@ -40,13 +40,13 @@ class AdvanceSearchMetadataFetching:
                     tax_id = self.fetching_taxonomy(self.tax)
             if tax_id and self.project:
                 ext = f"?result=read_run&query=tax_eq({tax_id})%20AND%20study_accession%3D%22{self.project}" \
-                      f"%22&fields=run_accession%2C{self.fileType.lower()}_ftp&limit=0&format=json"
+                      f"%22&fields=run_accession%2C{self.fileType.lower()}_ftp%2Csample_accession&limit=0&format=json"
             elif tax_id and not self.project:
                 ext = f"?result=read_run&query=tax_eq({tax_id})&fields=run_accession%2C{self.fileType.lower()}" \
-                      f"_ftp&limit=0&format=json"
+                      f"_ftp%2Csample_accession&limit=0&format=json"
             elif self.project and not tax_id:
                 ext = f"?result=read_run&query=study_accession%3D%22{self.project}%22&fields=run_accession%2C" \
-                      f"{self.fileType.lower()}_ftp&limit=0&format=json"
+                      f"{self.fileType.lower()}_ftp%2Csample_accession&limit=0&format=json"
             print(ext)
             sys.stderr.write(
                 'Fetching  Metadata From Advanced Search..............................................................')
@@ -66,7 +66,7 @@ class AdvanceSearchMetadataFetching:
                                  "( Data might be incomplete )\n")
             data = json.loads(command.content)
 
-            metadata = [{'run_accession': x['run_accession'], f'{self.fileType.lower()}_ftp': x[f'{self.fileType.lower()}_ftp']} for x in data]
+            metadata = [{'run_accession': x['run_accession'],'sample_accession':x['sample_accession'], f'{self.fileType.lower()}_ftp': x[f'{self.fileType.lower()}_ftp']} for x in data]
             metadata_df = pd.DataFrame(metadata)
 
             print(metadata_df)

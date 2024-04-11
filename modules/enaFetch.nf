@@ -5,33 +5,25 @@ nextflow.enable.dsl=2
 process ENA_RAWREADS_FETCH {
 	tag "ENA_RawReads_Fetch"                  
 	label 'default'                
-	publishDir "$output", mode: 'move' 
+	//publishDir "$readFiles_output", mode: 'move' 
 
     input:
-        val project_id
-        val tax_id
+        val url
+        val run_id
+        val sample_id
         val fileType
-        path output
+        path readFiles_output
+        path metadata_output
+        path ignore_list
 
     output:
-        path "$output/*.fastq*", arity: "0..*", emit: fastq, optional: true
-        path "$output/*.bam*", arity: "0..*", emit: bam, optional: true
+        path "$readFiles_output/*.fastq*", arity: "0..*", emit: fastq, optional: true
+        path "$readFiles_output/*.bam*", arity: "0..*", emit: bam, optional: true
+        path "$metadata_output/fetchedFiles_metadata.txt", emit: metadata_logs, optional: true
 
 
     script:
-    if (project_id != '' & tax_id != '') {
         """
-        ena_pathogen_fetch.py -p $project_id -t $tax_id -ft $fileType -o $output
+        fetchReads.py -url '$url' -r $run_id -s $sample_id -ft $fileType -o $readFiles_output -log $metadata_output -i $ignore_list 
         """
-     }
-     else if (tax_id == '' ) {
-        """
-        ena_pathogen_fetch.py -p $project_id -ft $fileType -o $output
-        """
-     }
-    else if (project_id == '' ) {
-        """
-        ena_pathogen_fetch.py -t $tax_id -ft $fileType -o $output
-        """
-     }
 }

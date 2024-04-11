@@ -18,6 +18,7 @@ process ENA_ANALYSIS_SUBMIT {
         val asynchronous
         val test
         path output
+        path analysisConfig_location
 
     output:
         path "$output/*.xml*", arity: "1..*", emit: logs, optional: true
@@ -30,14 +31,14 @@ process ENA_ANALYSIS_SUBMIT {
 
         if (asynchronous = 'true') {
         """
-        analysis_submission.py -t $test -p $project_id -s $sample_list -r $run_list -f $analysis_file -a $analysis_type -au $analysis_username -ap $analysis_password -as $asynchronous -o $output
+        analysis_submission.py -t $test -p $project_id -s $sample_list -r $run_list -f $analysis_file -a $analysis_type -au $analysis_username -ap $analysis_password -as $asynchronous -o $output -c $analysisConfig_location
         """
             
         }
         else {
 
         """
-        analysis_submission.py -t $test -p $project_id -s $sample_list -r $run_list -f $analysis_file -a $analysis_type -au $analysis_username -ap $analysis_password  -o $output
+        analysis_submission.py -t $test -p $project_id -s $sample_list -r $run_list -f $analysis_file -a $analysis_type -au $analysis_username -ap $analysis_password  -o $output -c $analysisConfig_location
         """
         }
     

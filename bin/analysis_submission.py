@@ -34,6 +34,7 @@ def get_args():
     parser.add_argument('-o', '--output_location', help='A parent directory to pull configuration file and store outputs.', type=str, required=False)
     parser.add_argument('-as', '--asynchronous', help='Specify usage of the asynchronous Webin API for submissions. Options are true/t or false/f. Default: false/f', type=str.lower, choices=['true', 't', 'false', 'f'], required=False)
     parser.add_argument('-t', '--test', help='Specify whether to use ENA test server for submission. Options are true/t or false/f', type=str.lower, choices=['true', 't', 'false', 'f'], required=True)
+    parser.add_argument('-c', '--config', help='Specify a path where the config.yaml file is located', type=str, required=True)
     args = parser.parse_args()
 
     if args.test in ['true', 't']:
@@ -300,7 +301,7 @@ if __name__=='__main__':
             sys.exit()
     else:
         args.output_location = '.'          # Default is the current working directory, unless specified
-    configuration = read_config(args.output_location)           # Configuration from YAML
+    configuration = read_config(args.config)           # Configuration from YAML
 
     # Handle indication of asynchronous Webin API
     if args.asynchronous in ['true', 't']:
