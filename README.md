@@ -1,4 +1,4 @@
-# ![nf-core/localdatahub](docs/images/nf-core-localdatahub_logo.png)
+# ![ENA/localdatahub](docs/images/ENA_logo_2021.width-500.png)
 
 **ena local datahub template**.
 
