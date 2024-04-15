@@ -5,7 +5,7 @@ nextflow.enable.dsl=2
 process ENA_ANALYSIS_SUBMIT {
 	tag "ENA_analysis_Submit"                  
 	label 'default'                
-	publishDir "$output", mode: 'move' 
+	//publishDir "$output", mode: 'move' 
 
     input:
         val project_id
@@ -19,9 +19,10 @@ process ENA_ANALYSIS_SUBMIT {
         val test
         path output
         path analysisConfig_location
+        path ignore_list
 
     output:
-        path "$output/*.xml*", arity: "1..*", emit: logs, optional: true
+        path "$output/*.txt", emit: logs, optional: true
 
 
     script:
@@ -29,16 +30,16 @@ process ENA_ANALYSIS_SUBMIT {
         def test = params.test?.toString()?.toLowerCase()
         
 
-        if (asynchronous = 'true') {
+        if (asynchronous == 'true') {
         """
-        analysis_submission.py -t $test -p $project_id -s $sample_list -r $run_list -f $analysis_file -a $analysis_type -au $analysis_username -ap $analysis_password -as $asynchronous -o $output -c $analysisConfig_location
+        analysis_submission.py -t $test -p $project_id -s $sample_list -r $run_list -f $analysis_file -a $analysis_type -au $analysis_username -ap $analysis_password -as $asynchronous -o $output -c $analysisConfig_location -i $ignore_list
         """
             
         }
         else {
 
         """
-        analysis_submission.py -t $test -p $project_id -s $sample_list -r $run_list -f $analysis_file -a $analysis_type -au $analysis_username -ap $analysis_password  -o $output -c $analysisConfig_location
+        analysis_submission.py -t $test -p $project_id -s $sample_list -r $run_list -f $analysis_file -a $analysis_type -au $analysis_username -ap $analysis_password  -o $output -c $analysisConfig_location -i $ignore_list
         """
         }
     

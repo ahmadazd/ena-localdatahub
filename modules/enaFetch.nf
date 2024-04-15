@@ -17,9 +17,8 @@ process ENA_RAWREADS_FETCH {
         path ignore_list
 
     output:
-        path "$readFiles_output/*.fastq*", arity: "0..*", emit: fastq, optional: true
-        path "$readFiles_output/*.bam*", arity: "0..*", emit: bam, optional: true
-        path "$metadata_output/fetchedFiles_metadata.txt", emit: metadata_logs, optional: true
+        path "$readFiles_output/*.${fileType}*", arity: "0..*", emit: files
+        path "$metadata_output/temp/fetchedFiles_temp.txt", emit: metadata_logs, optional: true
 
 
     script:

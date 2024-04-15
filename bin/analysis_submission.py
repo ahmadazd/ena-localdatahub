@@ -6,6 +6,7 @@ import argparse, hashlib, json, os, subprocess, sys, time, yaml
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from sra_objects import createWebinXML
+import pandas as pd
 
 
 
@@ -24,9 +25,17 @@ def get_args():
         + =========================================================== +
         """)
     parser.add_argument('-p', '--project', help='Valid ENA project accession to submit analysis to (e.g. PRJXXXXXXX)', type=str, required=True)
-    parser.add_argument('-s', '--sample_list', help='ENA sample accessions/s to link with the analysis submission, accepts a list of accessions (e.g. ERSXXXXX,ERSXXXXX) or a file with list of accessions separated by new line', required=False)
-    parser.add_argument('-r', '--run_list', help='ENA run accession/s to link with the analysis submission, accepts a list of accessions (e.g. ERRXXXXX,ERRXXXXX) or a file with a list of accessions separated by new line', required=False)
-    parser.add_argument('-f', '--file', help='Files of analysis to submit to the project, accepts a list of files (e.g. path/to/file1.csv.gz,path/to/file2.txt.gz)', type=str, required=True)
+    parser.add_argument('-s', '--sample_list', help='ENA sample accessions/s to link with the analysis submission, '
+                                                    'accepts a list of accessions (e.g. ERSXXXXX,ERSXXXXX) or '
+                                                    'a file with list of accessions separated by new line, '
+                                                    'for the purpose of local data hub system, is not compatible with a file', required=False)
+    parser.add_argument('-r', '--run_list', help='ENA run accession/s to link with the analysis submission, accepts a list of accessions'
+                                                 ' (e.g. ERRXXXXX,ERRXXXXX) or a file with a '
+                                                 'list of accessions separated by new line,'
+                                                 ' for the purpose of local data hub system, is not compatible with a file', required=False)
+    parser.add_argument('-f', '--file', help='Files of analysis to submit to the project, accepts a list of files '
+                                             '(e.g. path/to/file1.csv.gz,path/to/file2.txt.gz),'
+                                             'for the purpose of local data hub system, is not compatible with a file', type=str, required=True)
     parser.add_argument('-a', '--analysis_type', help='Type of analysis to submit. Options: PATHOGEN_ANALYSIS, COVID19_CONSENSUS, COVID19_FILTERED_VCF, PHYLOGENY_ANALYSIS, FILTERED_VARIATION, SEQUENCE_CONSENSUS', choices=['PATHOGEN_ANALYSIS', 'COVID19_CONSENSUS', 'COVID19_FILTERED_VCF', 'PHYLOGENY_ANALYSIS', 'FILTERED_VARIATION', 'SEQUENCE_CONSENSUS'], required=True)         # Can add more options if you wish to share more analysis types
     parser.add_argument('-au', '--analysis_username', help='Valid Webin submission account ID (e.g. Webin-XXXXX) used to carry out the submission', type=str, required=True)
     parser.add_argument('-ap', '--analysis_password', help='Password for Webin submission account', type=str, required=True)
@@ -35,6 +44,8 @@ def get_args():
     parser.add_argument('-as', '--asynchronous', help='Specify usage of the asynchronous Webin API for submissions. Options are true/t or false/f. Default: false/f', type=str.lower, choices=['true', 't', 'false', 'f'], required=False)
     parser.add_argument('-t', '--test', help='Specify whether to use ENA test server for submission. Options are true/t or false/f', type=str.lower, choices=['true', 't', 'false', 'f'], required=True)
     parser.add_argument('-c', '--config', help='Specify a path where the config.yaml file is located', type=str, required=True)
+    parser.add_argument('-i', '--ignore', help='Specify a path where the ignore_list file is located', type=str,
+                        required=True)
     args = parser.parse_args()
 
     if args.test in ['true', 't']:
@@ -186,7 +197,14 @@ class upload_and_submit:
         with open(successful_subs, 'a') as f:
             for file in self.analysis_file:
                 f.write(str(accession) + "\t" + str(file.get('name')) + "\t" + str(self.datestamp) + "\n")             # Saves the analysis accession, local path to file and date of submission
-
+        if os.path.exists(args.ignore):
+            header = False
+        else:
+            header = True
+        run_accession = {'run_accession': [args.run_list]}
+        metadata_logs_df = pd.DataFrame.from_dict(run_accession)
+        metadata_logs_df.to_csv(args.ignore, mode="a", index=False,
+                                header=header)
     def retrieve_xml_info(self, output, error, attempts, webin_loc):
         """
         Handle information from an XML output following submission
@@ -293,59 +311,63 @@ class upload_and_submit:
 
 if __name__=='__main__':
     args = get_args()       # Get script arguments
-
-    if args.output_location is not None:
-        # Check that the output directory exists, as this would be a prefix.
-        if os.path.isdir(args.output_location) is not True:
-            print('ERROR: Please provide a valid and existing output directory... Exiting.')
-            sys.exit()
+    if os.path.exists(args.ignore):
+        ignore_list = pd.read_csv(args.ignore)
     else:
-        args.output_location = '.'          # Default is the current working directory, unless specified
-    configuration = read_config(args.config)           # Configuration from YAML
+        ignore_list = pd.DataFrame(columns=['run_accession'])
+    if not args.run_list in ignore_list['run_accession'].values:
+        if args.output_location is not None:
+            # Check that the output directory exists, as this would be a prefix.
+            if os.path.isdir(args.output_location) is not True:
+                print('ERROR: Please provide a valid and existing output directory... Exiting.')
+                sys.exit()
+        else:
+            args.output_location = '.'          # Default is the current working directory, unless specified
+        configuration = read_config(args.config)           # Configuration from YAML
 
-    # Handle indication of asynchronous Webin API
-    if args.asynchronous in ['true', 't']:
-        api_service = 'submit/queue'
-    else:
-        api_service = 'submit'
+        # Handle indication of asynchronous Webin API
+        if args.asynchronous in ['true', 't']:
+            api_service = 'submit/queue'
+        else:
+            api_service = 'submit'
 
-    # Handle any metadata references
-    if args.sample_list is not None:            # Sample references are technically optional for analysis objects
-        samples = convert_to_list(args.sample_list)
-    else:
-        samples = ""
+        # Handle any metadata references
+        if args.sample_list is not None:            # Sample references are technically optional for analysis objects
+            samples = convert_to_list(args.sample_list)
+        else:
+            samples = ""
 
-    if args.run_list is not None:
-        runs = convert_to_list(args.run_list)
-    else:
-        runs = ""
+        if args.run_list is not None:
+            runs = convert_to_list(args.run_list)
+        else:
+            runs = ""
 
-    if ',' in args.file:
-        files = list(args.file.split(','))
-    else:
-        files = [args.file]
+        if ',' in args.file:
+            files = list(args.file.split(','))
+        else:
+            files = [args.file]
 
-    # Define sections to include in analysis XML
-    timestamp_now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S") # Get a formatted date and time string
-    analysis_date = timestamp_now if not args.analysis_date else args.analysis_date
+        # Define sections to include in analysis XML
+        timestamp_now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S") # Get a formatted date and time string
+        analysis_date = timestamp_now if not args.analysis_date else args.analysis_date
 
-    # Create an appropriate alias to tag submissions
-    if len(runs) == 1:
-        alias = configuration['ALIAS'] + '_' + str(runs[0])
-        if samples != "" and len(samples) == 1:         # If there is a single sample reference provided, add this to the alias
-            alias += '_' + str(samples[0])
-        alias += "_" + str(timestamp_now)
-    else:
-        alias = configuration['ALIAS'] + '_' + str(timestamp_now)
+        # Create an appropriate alias to tag submissions
+        if len(runs) == 1:
+            alias = configuration['ALIAS'] + '_' + str(runs[0])
+            if samples != "" and len(samples) == 1:         # If there is a single sample reference provided, add this to the alias
+                alias += '_' + str(samples[0])
+            alias += "_" + str(timestamp_now)
+        else:
+            alias = configuration['ALIAS'] + '_' + str(timestamp_now)
 
-    # Obtain file information
-    file_preparation_obj = file_handling(files, args.analysis_type)     # Instantiate object for analysis file handling information
-    analysis_file = file_preparation_obj.construct_file_info()      # Obtain information on file/s to be submitted for the analysis XML
+        # Obtain file information
+        file_preparation_obj = file_handling(files, args.analysis_type)     # Instantiate object for analysis file handling information
+        analysis_file = file_preparation_obj.construct_file_info()      # Obtain information on file/s to be submitted for the analysis XML
 
-    # Create the Webin XML for submission
-    create_xml_object = createWebinXML(alias, configuration, args.project, analysis_date, timestamp_now, analysis_file, args.analysis_type, args.output_location, sample_accession=samples, run_accession=runs)
-    webin_xml = create_xml_object.build_webin()
+        # Create the Webin XML for submission
+        create_xml_object = createWebinXML(alias, configuration, args.project, analysis_date, timestamp_now, analysis_file, args.analysis_type, args.output_location, sample_accession=samples, run_accession=runs)
+        webin_xml = create_xml_object.build_webin()
 
-    # Upload data files and submit to ENA
-    submission_obj = upload_and_submit(analysis_file, args.analysis_username, args.analysis_password, timestamp_now, args.output_location, api_service, args.test)
-    submission = submission_obj.submit_data()
+        # Upload data files and submit to ENA
+        submission_obj = upload_and_submit(analysis_file, args.analysis_username, args.analysis_password, timestamp_now, args.output_location, api_service, args.test)
+        submission = submission_obj.submit_data()

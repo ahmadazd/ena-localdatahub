@@ -21,35 +21,40 @@ class FetchingReadFiles:
         self.sample_id = sample_id
         self.logs =logs
 
-    def mkdir(self):
-        if not os.path.exists(self.outdir):
-            os.mkdir(self.outdir)
+    def mkdir(self, outdir):
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
 
     def API_call(self,url=None):
         if url is not None:
             self.url = url
         for sub_url in self.url.split(';'):
-            command = f'lftp -c "open ftp://ftp.sra.ebi.ac.uk; get {sub_url.strip("ftp.sra.ebi.ac.uk")} -o ' \
-                      f'{os.path.abspath(self.outdir)}"'
-            print(command)
-            sp = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, err = sp.communicate()
-            sys.stderr.write(out.decode())
-            sys.stderr.write(err.decode())
-            stdoutOrigin = sys.stdout
             file_name = sub_url.split('/')
-            if not err:
-                if os.path.exists(f"{os.path.abspath(self.outdir)}/{file_name[6]}"):
-                    if os.path.exists(f"{self.logs}/fetchedFiles_metadata.txt"):
-                        header = False
-                    else:
-                        header = True
+            if not os.path.exists(f"{os.path.abspath(self.outdir)}/{file_name[6]}"):
+                command = f'lftp -c "open ftp://ftp.sra.ebi.ac.uk; get {sub_url.strip("ftp.sra.ebi.ac.uk")} -o ' \
+                          f'{os.path.abspath(self.outdir)}"'
+                print(command)
+                sp = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                out, err = sp.communicate()
+                sys.stderr.write(out.decode())
+                sys.stderr.write(err.decode())
+                stdoutOrigin = sys.stdout
+                if os.path.exists(f"{self.logs}/fetchedFiles_log.txt"):
+                    header = False
+                else:
+                    header = True
+                metadata_logs = {'run_accession': [self.run_id], 'sample_id': [self.sample_id],
+                                 'file_name': [file_name[6]]}
+                metadata_logs_df = pd.DataFrame.from_dict(metadata_logs)
+                metadata_logs_df.to_csv(f"{self.logs}/fetchedFiles_log.txt", mode="a", index=False,
+                                        header=header)
+            self.mkdir(f"{self.logs}/temp")
+            metadata_logs = {'run_accession': [self.run_id], 'sample_id': [self.sample_id],
+                             'file_name': [file_name[6]]}
+            metadata_logs_df = pd.DataFrame.from_dict(metadata_logs)
+            metadata_logs_df.to_csv(f"{self.logs}/temp/fetchedFiles_temp.txt", index = False,
+                                    header = True)
 
-                    metadata_logs = {'run_accession': [self.run_id], 'sample_id': [self.sample_id],
-                                     'file_name': [file_name[6]]}
-                    metadata_logs_df = pd.DataFrame.from_dict(metadata_logs)
-                    metadata_logs_df.to_csv(f"{self.logs}/fetchedFiles_metadata.txt", mode ="a", index = False,
-                                            header = header)
 
 
     def fetching_readsFiles(self):
