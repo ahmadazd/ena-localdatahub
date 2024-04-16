@@ -1,15 +1,61 @@
 # You can use this file to create a conda environment for this pipeline:
 #   conda env create -f environment.yml
-name: nf-core-localdatahub-1.0dev
+name: localDatahubs
 channels:
-  - conda-forge
   - bioconda
   - defaults
 dependencies:
-  - conda-forge::python=3.7.3
-  - conda-forge::markdown=3.1.1
-  - conda-forge::pymdown-extensions=6.0
-  - conda-forge::pygments=2.5.2
-  # TODO nf-core: Add required software dependencies here
-  - bioconda::fastqc=0.11.8
-  - bioconda::multiqc=1.7
+  - _libgcc_mutex=0.1=main
+  - _openmp_mutex=5.1=1_gnu
+  - blas=1.0=mkl
+  - bottleneck
+  - brotli-python
+  - bzip2
+  - ca-certificates
+  - certifi
+  - charset-normalizer
+  - expat
+  - icu
+  - idna
+  - intel-openmp
+  - ld_impl_linux-64
+  - libffi
+  - libgcc-ng
+  - libgomp
+  - libstdcxx-ng
+  - libuuid
+  - libxml2
+  - libxslt
+  - lxml
+  - mkl
+  - mkl-service
+  - mkl_fft
+  - mkl_random
+  - ncurses
+  - numexpr
+  - numpy
+  - numpy-base
+  - openssl
+  - pandas
+  - pip
+  - pysocks
+  - python
+  - python-dateutil
+  - python-tzdata
+  - pytz
+  - pyyaml
+  - readline
+  - requests
+  - setuptools
+  - six
+  - sqlite
+  - tbb
+  - tk
+  - tzdata
+  - urllib3
+  - wheel
+  - xz
+  - yaml
+  - zlib
+    # TODO nf-core: Add required software dependencies here
+prefix: ./localDatahubs_env
