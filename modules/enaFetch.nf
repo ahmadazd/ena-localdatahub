@@ -3,7 +3,7 @@
 nextflow.enable.dsl=2 
 
 process ENA_RAWREADS_FETCH {
-	tag "ENA_RawReads_Fetch"                  
+	tag "Downloading: $run_id"                  
 	label 'default'                
 	//publishDir "$readFiles_output", mode: 'move' 
 

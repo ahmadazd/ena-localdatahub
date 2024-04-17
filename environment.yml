@@ -57,4 +57,4 @@ dependencies:
   - xz
   - yaml
   - zlib
-    # TODO nf-core: Add required software dependencies here
+    # TODO: Add required software dependencies here

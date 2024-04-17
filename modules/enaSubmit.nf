@@ -3,7 +3,7 @@
 nextflow.enable.dsl=2 
 
 process ENA_ANALYSIS_SUBMIT {
-	tag "ENA_analysis_Submit"                  
+	tag "Submitting $analysis_file"                  
 	label 'default'                
 	//publishDir "$output", mode: 'move' 
 

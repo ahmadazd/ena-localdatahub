@@ -3,7 +3,7 @@
 nextflow.enable.dsl=2 
 
 process ENA_METADATA_FETCH {
-	tag "ENA_RawReads_Fetch"                  
+	tag "ENA_RawReads_metadata_Fetch"                  
 	label 'default'                
 	//publishDir "$output", mode: 'move' 
 
