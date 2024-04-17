@@ -1,6 +1,6 @@
 # You can use this file to create a conda environment for this pipeline:
 #   conda env create -f environment.yml
-name: localDatahubs
+name: ENA-localdatahub-1.0
 channels:
   - bioconda
   - defaults
@@ -58,4 +58,3 @@ dependencies:
   - yaml
   - zlib
     # TODO nf-core: Add required software dependencies here
-prefix: ./localDatahubs_env

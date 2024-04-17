@@ -157,7 +157,7 @@ workflow localDataHub_workflow {
                  */
 
         ena_analysis_submit_ch = ENA_ANALYSIS_SUBMIT(submit_project_id, analysed_metadata.sample_acc, analysed_metadata.run_acc, "$PWD/${analysed_metadata.file_name}",
-         analysis_type, webin_username, webin_password, asynchronous, test, "$PWD/${analysis_logs_output}", "$PWD/${analysisConfig_location}")
+         analysis_type, webin_username, webin_password, asynchronous, test, "$PWD/${analysis_logs_output}", "$PWD/${analysisConfig_location}", "$PWD/${ignore_list}")
 
 
 

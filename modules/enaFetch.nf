@@ -17,7 +17,7 @@ process ENA_RAWREADS_FETCH {
         path ignore_list
 
     output:
-        path "$readFiles_output/*.${fileType}*", arity: "0..*", emit: files
+        //path "$readFiles_output/*.${fileType}*", arity: "0..*", emit: files  //"arity" is not compatible with older versions of nextflow < 23.10.1.5891
         path "$metadata_output/temp/fetchedFiles_temp.txt", emit: metadata_logs, optional: true
 
 
