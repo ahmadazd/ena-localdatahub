@@ -30,26 +30,25 @@ def helpMessage() {
   log.info """
         Usage:
         The typical command for running the pipeline is as follows:
-        nextflow run 
+        nextflow run main.nf --metadata_project_id <PRJ#####> --submit_project_id <PRJ#####> --tax_id <####> --fileType <fastq/bam>  --analysis_type <analysis type> --webin_username <Webin-####> --webin_password <webin password> --asynchronous <true/false> --test <true/false>
 
         Mandatory arguments:
         --submit_project_id             Analysis Project accession number ( where the analysis will be submitted to) 
         --metadata_project_id or tax_id Raw read project accession number or the raw reads Tax Id (one parameter should be used at least)
         --fileType                      The downloaded file type (fastq or bam)
-        --ignore_list
-        --analysis_type                 The analysis type
+        --analysis_type                 The analysis type ('PATHOGEN_ANALYSIS', 'COVID19_CONSENSUS', 'COVID19_FILTERED_VCF', 'PHYLOGENY_ANALYSIS', 'FILTERED_VARIATION', 'SEQUENCE_CONSENSUS')
         --webin_username                The webin account to submit the analysis  
         --webin_password                The password for the webin account
 
         Optional arguments:
         --help                         This usage statement.
-        --asynchronous                 Default false 
-        --test                         Default true
-        --metadata_output              Default logs
-        --readFiles_output             The directory name for the reads output files, default rawReadsFiles
-        --analysis_logs_output         The directory name for the analysis output logs, default logs
-        --analysisConfig_location      The directory for the analysis config file, default conf
-        --ignore_list                  Name of the ignore list file that contains the list of the runs to be excluded from fetching, defult ignore_list.txt
+        --asynchronous                 Using the asynchronous option to submit the analysis (true/false), Default false 
+        --test                         Using the test server to submit the analysis (true/false) Default true
+        --metadata_output              The directory for the logs, Default ./logs
+        --readFiles_output             The directory name for the reads output files, default ./rawReadsFiles
+        --analysis_logs_output         The directory name for the analysis output logs, default ./logs
+        --analysisConfig_location      The directory for the analysis config file, default ./conf
+        --ignore_list                  Name of the ignore list file that contains the list of the runs to be excluded from fetching, default ./ignore_list.txt
         """
 }
 

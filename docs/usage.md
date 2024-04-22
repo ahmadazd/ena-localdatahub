@@ -1,20 +1,24 @@
-# nf-core/localdatahub: Usage
+# ENA/localdatahub: Usage
 
 ## Table of contents
 
 * [Table of contents](#table-of-contents)
 * [Introduction](#introduction)
 * [Running the pipeline](#running-the-pipeline)
-  * [Updating the pipeline](#updating-the-pipeline)
-  * [Reproducibility](#reproducibility)
 * [Main arguments](#main-arguments)
   * [`-profile`](#-profile)
-  * [`--reads`](#--reads)
-  * [`--single_end`](#--single_end)
-* [Reference genomes](#reference-genomes)
-  * [`--genome` (using iGenomes)](#--genome-using-igenomes)
-  * [`--fasta`](#--fasta)
-  * [`--igenomes_ignore`](#--igenomes_ignore)
+  * [`--metadata_project_id` & `--tax_id`](#--metadata_project_id&--tax_id)
+  * [`--fileType`](#--fileType)
+  * [`--readFiles_output`](#--readFiles_output)
+  * [`--metadata_output`](#--metadata_output)
+  * [`--submit_project_id`](#--submit_project_id)
+  * [`--analysis_type`](#--analysis_type)
+  * [`--webin_username` & `--webin_password`](#--webin_username&--webin_password)
+  * [`--analysis_logs_output`](#--analysis_logs_output)
+  * [`--analysisConfig_location`](#--analysisConfig_location)
+  * [`--ignore_list`](#--ignore_list)
+  * [`--asynchronous`](#--asynchronous)
+  * [`--test`](#--test)
 * [Job resources](#job-resources)
   * [Automatic resubmission](#automatic-resubmission)
   * [Custom resource requests](#custom-resource-requests)
@@ -24,20 +28,11 @@
   * [`--awscli`](#--awscli)
 * [Other command line parameters](#other-command-line-parameters)
   * [`--outdir`](#--outdir)
-  * [`--email`](#--email)
-  * [`--email_on_fail`](#--email_on_fail)
-  * [`--max_multiqc_email_size`](#--max_multiqc_email_size)
-  * [`-name`](#-name)
   * [`-resume`](#-resume)
   * [`-c`](#-c)
-  * [`--custom_config_version`](#--custom_config_version)
-  * [`--custom_config_base`](#--custom_config_base)
   * [`--max_memory`](#--max_memory)
   * [`--max_time`](#--max_time)
   * [`--max_cpus`](#--max_cpus)
-  * [`--plaintext_email`](#--plaintext_email)
-  * [`--monochrome_logs`](#--monochrome_logs)
-  * [`--multiqc_config`](#--multiqc_config)
 
 ## Introduction
 
@@ -52,39 +47,58 @@ NXF_OPTS='-Xms1g -Xmx4g'
 <!-- TODO nf-core: Document required command line parameters to run the pipeline-->
 
 ## Running the pipeline
-
+Before Running the pipeline make sure to complete the following analysis metadata parameters for submission in the `./conf/config.yml` file:
+```
+CENTER_NAME: <The name of the Institution that analysed and submitted the data>
+ALIAS: <Analysis Alias>
+TITLE: <Analysis Title> 
+DESCRIPTION: <Analysis Description>
+PIPELINE_NAME: <Pipeline title>
+PIPELINE_VERSION: <Pipeline Version>
+SUBMISSION_TOOL: Local DataHub
+SUBMISSION_TOOL_VERSION: Local DataHub Version
+ACTION: add
+```
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/localdatahub --reads '*_R{1,2}.fastq.gz' -profile docker
+nextflow run main.nf --metadata_project_id <PRJ#####> --submit_project_id <PRJ#####> --tax_id <####> --fileType <fastq/bam>  --analysis_type <analysis type> --webin_username <Webin-####> --webin_password <webin password> --asynchronous <true/false> --test <true/false>  -with-docker [docker image] or -with-singularity [docker image]
 ```
 
-This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
+This will launch the pipeline with the `docker` or `singularity` by using the following arguments:
+- for Docker: `-with-docker [docker image]`
+- for Singularity: `-with-singularity [docker image]` or `-with-singularity [singularity image]`
+
+Conda can be used by adding the `--profile conda` arguments
+*Note:* To avoid using all the above arguments, they can be included as a *params* in the `nextflow.config` file as following:
+```
+params {
+  readFiles_output = 
+  ignore_list = 
+  asynchronous = 
+  test = 
+  metadata_project_id = 
+  tax_id = 
+  submit_project_id = 
+  fileType = 
+  analysis_type = 
+  webin_username = 
+  webin_password = 
+```
+*Note:*  to avoid using the container arguments you can add the image into the `nextflow.config` file as follows:
+`process.container = '/path/to/containerImage'`
 
 Note that the pipeline will create the following files in your working directory:
 
 ```bash
 work            # Directory containing the nextflow working files
-results         # Finished results (configurable, see below)
+results         # pipeline running results (configurable, by modifying nextflow.config)
 .nextflow_log   # Log file from Nextflow
+rawReadsFiles   # Directory contains the downloaded raw reads (configurable, by modifying nextflow.config)
+logs            # Directory contains the pipeline log files (configurable, by modifying nextflow.config)
+ignore_list.txt # accession list for runs to be excluded from the pipeline (configurable, by modifying nextflow.config)
 # Other nextflow hidden files, eg. history of pipeline runs and old logs.
 ```
-
-### Updating the pipeline
-
-When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
-
-```bash
-nextflow pull nf-core/localdatahub
-```
-
-### Reproducibility
-
-It's a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
-
-First, go to the [nf-core/localdatahub releases page](https://github.com/nf-core/localdatahub/releases) and find the latest version number - numeric only (eg. `1.3.1`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 1.3.1`.
-
-This version number will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future.
 
 ## Main arguments
 
@@ -96,8 +110,6 @@ Several generic profiles are bundled with the pipeline which instruct the pipeli
 
 > We highly recommend the use of Docker or Singularity containers for full pipeline reproducibility, however when this is not possible, Conda is also supported.
 
-The pipeline also dynamically loads configurations from [https://github.com/nf-core/configs](https://github.com/nf-core/configs) when it runs, making multiple config profiles for various institutional clusters available at run time. For more information and to see if your system is available in these configs please see the [nf-core/configs documentation](https://github.com/nf-core/configs#documentation).
-
 Note that multiple profiles can be loaded, for example: `-profile test,docker` - the order of arguments is important!
 They are loaded in sequence, so later profiles can overwrite earlier profiles.
 
@@ -105,97 +117,161 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
 
 * `docker`
   * A generic configuration profile to be used with [Docker](http://docker.com/)
-  * Pulls software from dockerhub: [`nfcore/localdatahub`](http://hub.docker.com/r/nfcore/localdatahub/)
 * `singularity`
   * A generic configuration profile to be used with [Singularity](http://singularity.lbl.gov/)
-  * Pulls software from DockerHub: [`nfcore/localdatahub`](http://hub.docker.com/r/nfcore/localdatahub/)
 * `conda`
   * Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker or Singularity.
   * A generic configuration profile to be used with [Conda](https://conda.io/docs/)
   * Pulls most software from [Bioconda](https://bioconda.github.io/)
-* `test`
-  * A profile with a complete configuration for automated testing
-  * Includes links to test data so needs no other parameters
 
-<!-- TODO nf-core: Document required command line parameters -->
 
-### `--reads`
+### `--metadata_project_id` & `--tax_id`
 
-Use this to specify the location of your input FastQ files. For example:
+Use one or both of these parameters to specify the project and the tax_id of the raw data needs to be downloaded from ENA. For example:
 
-```bash
---reads 'path/to/data/sample_*_{1,2}.fastq'
+```
+--metadata_project_id PRJ#### --tax_id #####
 ```
 
 Please note the following requirements:
 
-1. The path must be enclosed in quotes
-2. The path must have at least one `*` wildcard character
-3. When using the pipeline with paired end data, the path must use `{1,2}` notation to specify read pairs.
+1. The project id must be in the format of PRJ#####
+2. The Tax Id must be compatible with [NCBI taxonomy](https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi)
 
-If left unspecified, a default pattern is used: `data/*{1,2}.fastq.gz`
+One of the above parameters *at least*  needs to be specified
 
-### `--single_end`
+### `--fileType`
 
-By default, the pipeline expects paired-end data. If you have single-end data, you need to specify `--single_end` on the command line when you launch the pipeline. A normal glob pattern, enclosed in quotation marks, can then be used for `--reads`. For example:
+Use this to specify the type of the raw files that will be downloaded, this is a mandatory parameter that only accept two options `bam` and `fastq` as a value. For example:
 
 ```bash
---single_end --reads '*.fastq'
+--fileType <fastq/bam>
 ```
 
-It is not possible to run a mixture of single-end and paired-end files in one run.
+### `--readFiles_output`
 
-## Reference genomes
+Use this parameter to indicate the output directory of the downloaded raw files, this is by default directed toward the `./rawReadsFiles` directory, however this configrable by changing its value in the `nextflow.config` file or by adding the relative path directly on the command line. 
 
-The pipeline config files come bundled with paths to the illumina iGenomes reference index files. If running with docker or AWS, the configuration is set up to use the [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) resource.
-
-### `--genome` (using iGenomes)
-
-There are 31 different species supported in the iGenomes references. To run the pipeline, you must specify which to use with the `--genome` flag.
-
-You can find the keys to specify the genomes in the [iGenomes config file](../conf/igenomes.config). Common genomes that are supported are:
-
-* Human
-  * `--genome GRCh37`
-* Mouse
-  * `--genome GRCm38`
-* _Drosophila_
-  * `--genome BDGP6`
-* _S. cerevisiae_
-  * `--genome 'R64-1-1'`
-
-> There are numerous others - check the config file for more.
-
-Note that you can use the same configuration setup to save sets of reference files for your own use, even if they are not part of the iGenomes resource. See the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for instructions on where to save such a file.
-
-The syntax for this reference configuration is as follows:
-
-<!-- TODO nf-core: Update reference genome example according to what is needed -->
-
-```nextflow
+```
+#nextflow.config
 params {
-  genomes {
-    'GRCh37' {
-      fasta   = '<path to the genome fasta file>' // Used if no star index given
-    }
-    // Any number of additional genomes, key is used with --genome
+  readFiles_output = './rawReadsFiles'
   }
-}
+```
+```
+#command line
+--readFiles_output ./rawReadsFiles
+```
+### `--metadata_output`
+
+Use this parameter to indicate the log directory of the downloaded raw files metadata, this is by default directed toward the `./logs` directory, however this configrable by changing its value in the `nextflow.config` file or by adding the relative path directly on the command line. 
+
+```
+#nextflow.config
+params {
+  metadata_output = './logs'
+  }
+```
+```
+#command line
+--metadata_output ./logs
 ```
 
-<!-- TODO nf-core: Describe reference path flags -->
+### `--submit_project_id`
 
-### `--fasta`
-
-If you prefer, you can specify the full path to your reference genome when you run the pipeline:
-
-```bash
---fasta '[path to Fasta reference]'
+Use this parameter to indicate the project Id that you wish to submit the analysed files to, this is a mandatory parameter can be included in the command line directly or add it to the `nextflow.config` file
+```
+#nextflow.config
+params {
+  submit_project_id = <'PRJ####'>
+  }
+```
+```
+#command line
+--submit_project_id <PRJ####>
 ```
 
-### `--igenomes_ignore`
+### `--analysis_type`
+This parameter is to declare the submitted analyses type, this is a mandatory parameter, only these options are supported: 
+`'PATHOGEN_ANALYSIS', 'COVID19_CONSENSUS', 'COVID19_FILTERED_VCF', 'PHYLOGENY_ANALYSIS', 'FILTERED_VARIATION', 'SEQUENCE_CONSENSUS'`. This can be added as a `params` into the `nextflow.config` file or directly into the command line for example:
 
-Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`.
+```
+#nextflow.config
+params {
+  analysis_type = <'PATHOGEN_ANALYSIS'>
+  }
+```
+```
+#command line
+--analysis_type <'PATHOGEN_ANALYSIS'>
+```
+
+### `--webin_username` & `--webin_password`
+These are mandatory parameters for the submission webin account credentials. if you dont have a webin account please register through [webin submission portal](https://www.ebi.ac.uk/ena/submit/webin/login). This can be added as a `params` into the `nextflow.config` file or directly into the command line for example:
+
+```
+#nextflow.config
+params {
+  webin_username = <'webin-####'>
+  webin_password = <'password'>
+  }
+```
+```
+#command line
+--webin_username <webin-####> --webin_password <'password'>
+```  
+
+### `--analysis_logs_output`
+Use this parameter to indicate the output directory of the analysis submission logs, this is by default directed toward the `./logs` directory, however this configrable by changing its value in the `nextflow.config` file or by adding the relative path directly on the command line. 
+
+```
+#nextflow.config
+params {
+  analysis_logs_output = './logs'
+  }
+```
+```
+#command line
+--analysis_logs_output ./logs
+```
+### `--analysisConfig_location`
+This parameter to indicate the directory where the analysis submission configration file `config.yml` reside this is by default directed toward the `./conf` directory, however, this configrable by changing its value in the `nextflow.config` file or by adding the relative path directly on the command line. 
+```
+#nextflow.config
+params {
+  analysisConfig_location = './conf'
+  }
+```
+```
+#command line
+--analysisConfig_location ./conf
+```
+### `--ignore_list`
+Ignore list is a list of run accessions that will be excluded from being downloaded and analysed. This parameter is used to locate the path of this list. The list will be extended while the pipeline is running to include all the run ids related to the analysis that have sucessfully been submitted. Additionally, the list can be modified manually or using a script provided by the user. By default the value of this parameter is `./ignore_list.txt`.  however, this configrable by changing its value in the `nextflow.config` file or by adding the relative path directly on the command line. 
+```
+#nextflow.config
+params {
+  ignore_list = './ignore_list.txt'
+  }
+```
+```
+#command line
+--ignore_list ./ignore_list.txt
+```
+
+### `--asynchronous`
+This parameter to specify usage of the asynchronous Webin API for analysis submissions. When a submission is made using the asynchronous endpoint, it enters a pending state in a queue of submissions. This submission is processed once it reaches the front of this queue. The asynchronous submission endpoint supports larger and a higher volume of submissions than the synchronous endpoint. The default value of this parameter is `false`. 
+
+```
+--asynchronous true
+```
+
+### `--test`
+This parameter to specify usage of the test server for analysis submissions. The default value of this parameter is `true`. to submit on the production server you need to change the value to `false` 
+
+```
+--test false
+```
 
 ## Job resources
 
@@ -206,10 +282,6 @@ Each step in the pipeline has a default set of requirements for number of CPUs, 
 ### Custom resource requests
 
 Wherever process-specific requirements are set in the pipeline, the default value can be changed by creating a custom config file. See the files hosted at [`nf-core/configs`](https://github.com/nf-core/configs/tree/master/conf) for examples.
-
-If you are likely to be running `nf-core` pipelines regularly it may be a good idea to request that your custom config file is uploaded to the `nf-core/configs` git repository. Before you do this please can you test that the config file works with your pipeline of choice using the `-c` parameter (see definition below). You can then create a pull request to the `nf-core/configs` repository with the addition of your config file, associated documentation file (see examples in [`nf-core/configs/docs`](https://github.com/nf-core/configs/tree/master/docs)), and amending [`nfcore_custom.config`](https://github.com/nf-core/configs/blob/master/nfcore_custom.config) to include your custom profile.
-
-If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack).
 
 ## AWS Batch specific parameters
 
@@ -231,31 +303,12 @@ Please make sure to also set the `-w/--work-dir` and `--outdir` parameters to a 
 
 ## Other command line parameters
 
-<!-- TODO nf-core: Describe any other command line flags here -->
+<!-- TODO: Describe any other command line flags here -->
 
 ### `--outdir`
 
 The output directory where the results will be saved.
 
-### `--email`
-
-Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.
-
-### `--email_on_fail`
-
-This works exactly as with `--email`, except emails are only sent if the workflow is not successful.
-
-### `--max_multiqc_email_size`
-
-Threshold size for MultiQC report to be attached in notification email. If file generated by pipeline exceeds the threshold, it will not be attached (Default: 25MB).
-
-### `-name`
-
-Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic.
-
-This is used in the MultiQC report (if not default) and in the summary HTML / e-mail (always).
-
-**NB:** Single hyphen (core Nextflow option)
 
 ### `-resume`
 
@@ -273,36 +326,6 @@ Specify the path to a specific config file (this is a core NextFlow command).
 
 Note - you can use this to override pipeline defaults.
 
-### `--custom_config_version`
-
-Provide git commit id for custom Institutional configs hosted at `nf-core/configs`. This was implemented for reproducibility purposes. Default: `master`.
-
-```bash
-## Download and use config file with following git commid id
---custom_config_version d52db660777c4bf36546ddb188ec530c3ada1b96
-```
-
-### `--custom_config_base`
-
-If you're running offline, nextflow will not be able to fetch the institutional config files
-from the internet. If you don't need them, then this is not a problem. If you do need them,
-you should download the files from the repo and tell nextflow where to find them with the
-`custom_config_base` option. For example:
-
-```bash
-## Download and unzip the config files
-cd /path/to/my/configs
-wget https://github.com/nf-core/configs/archive/master.zip
-unzip master.zip
-
-## Run the pipeline
-cd /path/to/my/data
-nextflow run /path/to/pipeline/ --custom_config_base /path/to/my/configs/configs-master/
-```
-
-> Note that the nf-core/tools helper package has a `download` command to download all required pipeline
-> files + singularity containers + institutional configs in one go for you, to make this process easier.
-
 ### `--max_memory`
 
 Use to set a top-limit for the default memory requirement for each process.
@@ -318,14 +341,3 @@ Should be a string in the format integer-unit. eg. `--max_time '2.h'`
 Use to set a top-limit for the default CPU requirement for each process.
 Should be a string in the format integer-unit. eg. `--max_cpus 1`
 
-### `--plaintext_email`
-
-Set to receive plain-text e-mails instead of HTML formatted.
-
-### `--monochrome_logs`
-
-Set to disable colourful command line output and live life in monochrome.
-
-### `--multiqc_config`
-
-Specify a path to a custom MultiQC configuration file.
