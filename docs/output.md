@@ -10,8 +10,8 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and download, a
 
 * [Raw Reads Metadata Fetching](#RawReads_Metadata_Fetching) - retrieve the metadata for the raw read from ENA
 * [Raw Reads Data Fetching](#RawReadsDataFetching) - download the raw read files from ENA based on the metadata
-* [Data Analysis](Data_Analysis)- analysis module/subworkflow, implemented by the user
-* [Analysis Submission](Analysis_Submission) - submitting the analyse data into ENA
+* [Data Analysis](#Data_Analysis)- analysis module/subworkflow, implemented by the user
+* [Analysis Submission](#Analysis_Submission) - submitting the analyse data into ENA
 ## RawReads_Metadata_Fetching
 The module fetch the metadata from the specified project or the tax id and deposit the data into a comma seperated text file. The file will contain three columns, run_accession, sample_accession and ftp link for each file. the file will be located by default in the `logs` directory. 
 
