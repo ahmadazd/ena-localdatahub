@@ -14,6 +14,53 @@ Local Data Hubs is a collection of standardised tools and workflows that can be 
 - Standardised workflow template that suitable for the majority of the analysis types.
 - User friendly workflow that can be implemented simply on the user’s computing infrastructure
 **![Local DataHub Flow Chart](docs/images/Flowchart.png)**
+
+## User's Analysis Module/Subworkflow ##
+This step is implemented by the user. The user can create as much modules as needed and combine them in a single subworkflow. The workflow must be able to consume and parse the output from the Raw read fetching module and produce the input of the Analysis submission module
+**Input:**
+- Comma separated text file 
+-- Run Accession
+--  Sample Accession
+--  Raw read file name
+- Raw reads files 
+
+**Output:**
+- Comma separated text file
+-- Run Accession
+-- Sample Accession 
+-- Analysis File name including the **relative path**
+- Analysis Files
+
+**This process is done per run downloaded as follows:**
+```
+# You can retrive the run accession, sample accession and the file name and inject them in the next process by refrencing the following: 
+         run accession: fetched_metadata.run_acc
+         sample accession: fetched_metadata.sample_acc
+         file name: fetched_metadata.file_name
+```
+```
+# EXAMPLE OF THE USER SUB-WORKFLOW : 
+        user_output_ch = user_process (fetched_metadata.run_acc, fetched_metadata.sample_acc, fetched_metadata.file_name, otherInputParams)
+```
+```
+# Parse the metadata file and retrieve the runs along with their corresponding samples and analysed file names(should be including the relative path)
+        analysed_metadata_content = user_output_ch .splitCsv( header: ['run_accession','sample_accession', 'file_name'], skip: 1 ).multiMap { it ->
+        run_acc: it['run_accession']
+        sample_acc: it['sample_accession']
+        analysis_file: it['analysis_file']
+        }
+        .set{analysed_metadata}  
+```
+```
+
+# The parameters retrieved from the user channel's output can be used as inputs in the submission channel, as follows:
+        run accession: analysed_metadata.run_acc
+        sample accession: analysed_metadata.sample_acc
+        analysis_file: analysed_metadata.file_name
+```
+
+*Execute the analysed file submitting process. The parameters values for run_accession (analysed_metadata.run_acc), sample accession (analysed_metadata.sample_acc) and analysed file names (analysed_metadata.file_name) can be used as an input for the analysis step* 
+
 ## Prerequisites
 
 i. Install [`nextflow`](https://nf-co.re/usage/installation)

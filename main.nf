@@ -133,7 +133,7 @@ workflow localDataHub_workflow {
         
         /* EXAMPLE OF THE USER SUB-WORKFLOW : user_output_ch = user_process (fetched_metadata.run_acc, fetched_metadata.sample_acc, fetched_metadata.file_name, otherInputParams)
         // Parse the metadata file and retrieve the runs along with their corresponding samples and analysed file names(should be including the relative path)
-        fetched_metadata_content = rawreads_output_ch .splitCsv( header: ['run_accession','sample_accession', 'file_name'], skip: 1 ).multiMap { it ->
+        analysed_metadata_content = user_output_ch .splitCsv( header: ['run_accession','sample_accession', 'file_name'], skip: 1 ).multiMap { it ->
         run_acc: it['run_accession']
         sample_acc: it['sample_accession']
         analysis_file: it['analysis_file']
