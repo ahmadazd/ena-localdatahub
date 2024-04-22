@@ -7,13 +7,13 @@
 * [Running the pipeline](#running-the-pipeline)
 * [Main arguments](#main-arguments)
   * [`-profile`](#-profile)
-  * [`--metadata_project_id`&`--tax_id`](#--metadata_project_id&--tax_id)
+  * [`--metadata_project_id & --tax_id`](#--metadata_project_id&--tax_id)
   * [`--fileType`](#--fileType)
   * [`--readFiles_output`](#--readFiles_output)
   * [`--metadata_output`](#--metadata_output)
   * [`--submit_project_id`](#--submit_project_id)
   * [`--analysis_type`](#--analysis_type)
-  * [`--webin_username` & `--webin_password`](#--webin_username&--webin_password)
+  * [`--webin_username  & --webin_password`](#--webin_username&--webin_password)
   * [`--analysis_logs_output`](#--analysis_logs_output)
   * [`--analysisConfig_location`](#--analysisConfig_location)
   * [`--ignore_list`](#--ignore_list)
@@ -125,7 +125,7 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
   * Pulls most software from [Bioconda](https://bioconda.github.io/)
 
 
-### `--metadata_project_id`&`--tax_id`
+### `--metadata_project_id&--tax_id`
 
 Use one or both of these parameters to specify the project and the tax_id of the raw data needs to be downloaded from ENA. For example:
 
@@ -206,7 +206,7 @@ params {
 --analysis_type <'PATHOGEN_ANALYSIS'>
 ```
 
-### `--webin_username`&`--webin_password`
+### `--webin_username&--webin_password`
 These are mandatory parameters for the submission webin account credentials. if you dont have a webin account please register through [webin submission portal](https://www.ebi.ac.uk/ena/submit/webin/login). This can be added as a `params` into the `nextflow.config` file or directly into the command line for example:
 
 ```
