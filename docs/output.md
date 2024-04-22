@@ -26,7 +26,10 @@ The module input and parse the output of the metadata fetching step and download
 
 ## Data_Analysis
 This is a data analysis module/subworkflow implemented by the user. it should be able to accept the comma seperated format output from the previous step and output a comma seperated format with at least three columns, run_accession, sample_accession and analysed_file name including the *relative path where the file is deposited*. 
+
 *Note: to be able to plug this module/workflow into the template, you should be able to parse the output of the previous step, analyse the data and output the results into the next step per run.* 
+
+
 **The output directory of this step is determined by the user**
 
 ## Analysis_Submission
