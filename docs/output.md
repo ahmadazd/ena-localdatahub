@@ -1,43 +1,40 @@
-# nf-core/localdatahub: Output
+# ENA/localdatahub: Output
 
-This document describes the output produced by the pipeline. Most of the plots are taken from the MultiQC report, which summarises results at the end of the pipeline.
+This document describes the process and the output produced by the pipeline.
 
-<!-- TODO nf-core: Write this documentation describing your workflow's output -->
+<!-- TODO : Write this documentation describing your workflow's output -->
 
 ## Pipeline overview
 
-The pipeline is built using [Nextflow](https://www.nextflow.io/)
-and processes data using the following steps:
+The pipeline is built using [Nextflow](https://www.nextflow.io/) and download, analyse and submit data to ENA using the following steps:
 
-* [FastQC](#fastqc) - read quality control
-* [MultiQC](#multiqc) - aggregate report, describing results of the whole pipeline
+* [Raw Reads Metadata Fetching](#RawReads_Metadata_Fetching) - retrieve the metadata for the raw read from ENA
+* [Raw Reads Data Fetching](#RawReadsDataFetching) - download the raw read files from ENA based on the metadata
+* [Data Analysis](Data_Analysis)- analysis module/subworkflow, implemented by the user
+* [Analysis Submission](Analysis_Submission) - submitting the analyse data into ENA
+## RawReads_Metadata_Fetching
+The module fetch the metadata from the specified project or the tax id and deposit the data into a comma seperated text file. The file will contain three columns, run_accession, sample_accession and ftp link for each file. the file will be located by default in the `logs` directory. 
 
-## FastQC
+**Output directory: `logs/reads_metadata.txt`
 
-[FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) gives general quality metrics about your reads. It provides information about the quality score distribution across your reads, the per base sequence content (%T/A/G/C). You get information about adapter contamination and other overrepresented sequences.
+## RawReads_Data_Fetching
+The module input and parse the output of the metadata fetching step and download the raw read files using the ftp links specified in the metadata file. Before downloading the data, the script check the runs in the `ignore_list.txt` file and exclude these runs -if exist- from the downloading process. the script will output a summary comma seperated text file contains the downloaded metadata in three columns, run_accession, sample_accession and file name. the summary file will be located by default in the `logs` directory. Additionally, the script will create a similar temprorary file for each run in `logs/temp` directory.  
 
-For further reading and documentation see the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/).
+**Output directory:** 
+- Summary file with all the downloaded data: `logs/fetchedFiles_log.txt`
+- Temprorary file for each run : `logs/temp/fetchedFiles_temp.txt`
 
-> **NB:** The FastQC plots displayed in the MultiQC report shows _untrimmed_ reads. They may contain adapter sequence and potentially regions with low quality. To see how your reads look after trimming, look at the FastQC reports in the `trim_galore` directory.
+## Data_Analysis
+This is a data analysis module/subworkflow implemented by the user. it should be able to accept the comma seperated format output from the previous step and output a comma seperated format with at least three columns, run_accession, sample_accession and analysed_file name including the *relative path where the file is deposited*. 
+*Note: to be able to plug this module/workflow into the template, you should be able to parse the output of the previous step, analyse the data and output the results into the next step per run.* 
+**The output directory of this step is determined by the user**
 
-**Output directory: `results/fastqc`**
+## Analysis_Submission
+This module uses the output of the analysis step in a comma seperated format, the output will be parsed and run_accession, sample_accession and the analysis file name ( the relative path should be included, for example `analysis/file.fasta`) will be retrieved.
+The module will output a submission log and metadata xmls in the `logs` directory and add the sucessfully submitted runs into the `ignore_list.txt` file. 
+ 
 
-* `sample_fastqc.html`
-  * FastQC report, containing quality metrics for your untrimmed raw fastq files
-* `zips/sample_fastqc.zip`
-  * zip file containing the FastQC report, tab-delimited data file and plot images
+**Output directory:** 
+- log files: `logs/successful_submissions.txt`
+- metadata xml file: `logs/*.xml`
 
-## MultiQC
-
-[MultiQC](http://multiqc.info) is a visualisation tool that generates a single HTML report summarising all samples in your project. Most of the pipeline QC results are visualised in the report and further statistics are available in within the report data directory.
-
-The pipeline has special steps which allow the software versions used to be reported in the MultiQC output for future traceability.
-
-**Output directory: `results/multiqc`**
-
-* `Project_multiqc_report.html`
-  * MultiQC report - a standalone HTML file that can be viewed in your web browser
-* `Project_multiqc_data/`
-  * Directory containing parsed statistics from the different tools used in the pipeline
-
-For more information about how to use MultiQC reports, see [http://multiqc.info](http://multiqc.info)
